@@ -1,0 +1,139 @@
+# Parallel Computing 
+
+## The Concept
+
+Video explains the concept the best: 
+[youtube video](https://youtu.be/aucZUdvkVyl)
+
+(1:13 - 2:35)
+
+## Amdahl's Law
+
+![](../images/amdahls_law.png)
+
+## Step 1 - Navigate to task manager
+
+- For Mac:
+    - cmd + alt + esc
+- For PC:
+    - ctrl + shift + esc
+
+- navigate to performance tab
+
+## Step 2a 
+### Using r and python to find out how many cores are available
+
+#### R 
+
+```{r install packages}
+pacman::p_load(parallel, parallelly, lme4)
+# parallel is a base package and parallelly is an enhanced version of the package. 
+```
+
+
+```{r detect cores}
+parallel::detectCores()
+
+parallelly::availableCores()
+``` 
+
+#### Python
+```{python}
+import os 
+import multiprocessing
+```
+
+```{python}
+os.cpu_count()
+
+```
+
+```{python}
+multiprocessing.cpu_count()
+```
+
+## Step 2b 
+### Definitions
+
+#### Core
+CPU stands for Central Processing Unit. Also known as core.
+
+A multicore processor is a CPU that has multiple cores or one piece of hardware with multiple CPU's in it.
+
+#### Hyper-Threading
+It allows a core to duplicate and turn into 2 rather than just one core, by creating virtual cores.
+
+This is know as a logical processor or logical core. 
+
+- Ex. My computer has two physical cores and 4 logical cores
+
+Definition from this website: https://www.tomshardware.com/reviews/hyper-threading-intel-definition,5746.html
+
+-  Hyper-Threading is Intel’s term for simultaneous multithreading (SMT). This is a process where a CPU splits each of its physical cores into virtual cores, which are known as threads. For example, most of Intel's CPUs with two cores use hyper-threading to provide four threads, and Intel CPUs with four cores use hyper-threading to provide eight threads.
+
+- Hyper-Threading allows each core to do two things simultaneously. It increases CPU performance by improving the processor’s efficiency, thereby allowing you to run multiple demanding apps at the same time or use heavily-threaded apps without the PC lagging.
+
+
+## Step 3
+#### Types of parallel computing 
+
+Fork 
+- "each parallel thread is a complete duplication of the master process with the shared environment" (reference)[https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/] 
+
+- does not work on windows
+
+
+Socket
+- "Each thread runs separately without sharing objects or variables, which can only be passed from the master process explicitly" (reference)[https://www.r-bloggers.com/2019/06/parallel-r-socket-or-fork/]
+
+#### Example
+
+```{r}
+f <- function(i) {
+    lmer(Petal.Width ~ . - Species + (1 | Species), data = iris)
+}
+
+system.time(save1 <- lapply(1:100, f))
+
+system.time(save2 <- mclapply(1:100, f))
+```
+
+```{r}
+numcores <- parallel::detectCores()
+numcores
+```
+
+```{r}
+# creates a parallel socket cluster
+cl <- parallel::makeCluster(numcores)
+```
+
+```{r}
+parallel::clusterEvalQ(cl, 2+2)
+```
+
+
+```{r}
+# x <- 1
+# parallel::clusterEvalQ(cl, x)
+```
+Throws error message:
+
+- Error in checkForRemoteErrors(lapply(cl, recvResult)) : 4 nodes produced errors; first error: object 'x' not found
+
+```{r}
+parallel::clusterEvalQ(cl, y <- 1)
+```
+
+
+## Packages to utilize parallel computing 
+
+#### Python
+
+- [python packages](https://www.guvi.in/blog/python-libraries-for-parallel-processing/)
+
+- [pandarallel repo](https://github.com/nalepae/pandarallel/blob/master/docs/examples_windows.ipynb)
+
+#### R 
+
+- [r packages](https://yxue-me.com/post/2019-05-12-a-glossary-of-parallel-computing-packages-in-r-2019/)
